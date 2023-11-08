@@ -1,0 +1,134 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to represent a task
+struct Task {
+    char name[100];
+    char description[200];
+    int priority;
+    struct Task* next;
+};
+
+// Structure to represent a priority queue
+struct PriorityQueue {
+    struct Task* front;
+};
+
+// Function to create a new task
+struct Task* createTask(char name[], char description[], int priority) {
+    struct Task* task = (struct Task*)malloc(sizeof(struct Task));
+    strcpy(task->name, name);
+    strcpy(task->description, description);
+    task->priority = priority;
+    task->next = NULL;
+    return task;
+}
+
+// Function to create a new priority queue
+struct PriorityQueue* createPriorityQueue() {
+    struct PriorityQueue* pq = (struct PriorityQueue*)malloc(sizeof(struct PriorityQueue));
+    pq->front = NULL;
+    return pq;
+}
+
+// Function to enqueue a task in the priority queue
+void enqueue(struct PriorityQueue* pq, struct Task* task) {
+    if (pq->front == NULL || task->priority > pq->front->priority) {
+        task->next = pq->front;
+        pq->front = task;
+    } else {
+        struct Task* current = pq->front;
+        while (current->next != NULL && task->priority <= current->next->priority) {
+            current = current->next;
+        }
+        task->next = current->next;
+        current->next = task;
+    }
+}
+
+// Function to dequeue the highest-priority task
+struct Task* dequeue(struct PriorityQueue* pq) {
+    if (pq->front == NULL) {
+        printf("Queue is empty.\n");
+        return NULL;
+    }
+    struct Task* task = pq->front;
+    pq->front = pq->front->next;
+    return task;
+}
+
+// Function to delete a task from the priority queue based on priority
+void deleteTask(struct PriorityQueue* pq, int priority) {
+    if (pq->front == NULL) {
+        printf("Queue is empty. No tasks to delete.\n");
+        return;
+    }
+
+    if (pq->front->priority == priority) {
+        struct Task* temp = pq->front;
+        pq->front = pq->front->next;
+        free(temp);
+        return;
+    }
+
+    struct Task* current = pq->front;
+    while (current->next != NULL && current->next->priority != priority) {
+        current = current->next;
+    }
+
+    if (current->next == NULL) {
+        printf("Task with priority %d not found.\n", priority);
+        return;
+    }
+
+    struct Task* temp = current->next;
+    current->next = temp->next;
+    free(temp);
+}
+
+// Function to display tasks in the priority queue
+void displayTasks(struct PriorityQueue* pq) {
+    struct Task* current = pq->front;
+    printf("Tasks in the priority queue:\n");
+    while (current != NULL) {
+        printf("Task: %s, Priority: %d\n", current->name, current->priority);
+        current = current->next;
+    }
+}
+
+int main() {
+    struct PriorityQueue* pq = createPriorityQueue();
+    
+    while (1) {
+        printf("1. Add Task\n2. Delete Task\n3. Display Tasks\n4. Exit\n");
+        int choice;
+        scanf("%d", &choice);
+        
+        if (choice == 1) {
+            char name[100], description[200];
+            int priority;
+            printf("Enter task name: ");
+            scanf(" %99[^\n]", name);
+            printf("Enter task description: ");
+            scanf(" %199[^\n]", description);
+            printf("Enter task priority: ");
+            scanf("%d", &priority);
+            struct Task* task = createTask(name, description, priority);
+            enqueue(pq, task);
+        } else if (choice == 2) {
+            int priority;
+            printf("Enter the priority of the task to delete: ");
+            scanf("%d", &priority);
+            deleteTask(pq, priority);
+        } else if (choice == 3) {
+            displayTasks(pq);
+        } else if (choice == 4) {
+            break;
+        } else {
+            printf("Invalid choice. Please try again.\n");
+        }
+    }
+    
+    return 0;
+}
